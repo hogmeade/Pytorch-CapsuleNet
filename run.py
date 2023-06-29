@@ -133,7 +133,7 @@ if __name__ == '__main__':
     dataset = 'cifar10'
     # dataset = 'mnist'
     config = Config(dataset)
-    mnist = Dataset(dataset, BATCH_SIZE)
+    cifar10 = Dataset(dataset, BATCH_SIZE)
 
     capsule_net = CapsNet(config)
     capsule_net = torch.nn.DataParallel(capsule_net)
@@ -144,5 +144,5 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(capsule_net.parameters())
 
     for e in range(1, N_EPOCHS + 1):
-        train(capsule_net, optimizer, mnist.train_loader, e)
-        test(capsule_net, mnist.test_loader, e)
+        train(capsule_net, optimizer, cifar10.train_loader, e)
+        test(capsule_net, cifar10.test_loader, e)
