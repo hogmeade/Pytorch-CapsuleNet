@@ -63,7 +63,8 @@ class DigitCaps(nn.Module):
 
         num_iterations = 3
         for iteration in range(num_iterations):
-            c_ij = F.softmax(b_ij, dim=1)
+            # c_ij = F.softmax(b_ij, dim=1)
+            c_ij = leaky_routing(b_ij, dim=1)
             c_ij = torch.cat([c_ij] * batch_size, dim=0).unsqueeze(4)
 
             s_j = (c_ij * u_hat).sum(dim=1, keepdim=True)
@@ -80,7 +81,12 @@ class DigitCaps(nn.Module):
         output_tensor = squared_norm * input_tensor / ((1. + squared_norm) * torch.sqrt(squared_norm))
         return output_tensor
 
-
+    def leaky_routing(logits, output_dim):
+        leak = torch.zeros(logits.size(), requires_grad=False).cuda()
+        leak = leak.sum(dim=2, keepdim=True)
+        leaky_logits = torch.concat((leak, logits), dim=2)
+        leaky_routing = F.softmax(leaky_logits, dim=2)
+        return torch.split(leaky_routing, [1, output_dim], 2)[1]
 class Decoder(nn.Module):
     def __init__(self, input_width=28, input_height=28, input_channel=1):
         super(Decoder, self).__init__()

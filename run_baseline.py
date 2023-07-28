@@ -9,13 +9,10 @@ from data_loader import Dataset
 from tqdm import tqdm
 
 USE_CUDA = True if torch.cuda.is_available() else False
-BATCH_SIZE = 128
+BATCH_SIZE = 100
 N_EPOCHS = 30
-LEARNING_RATE = 0.001
-MIN_LR = 1e-6
+LEARNING_RATE = 0.01
 MOMENTUM = 0.9
-DECAY_STEPS = 2000
-DECAY_RATE  = 0.96
 
 '''
 Config class to determine the parameters for capsule net
@@ -55,20 +52,20 @@ class Config:
 
             # Primary Capsule (pc)
             self.pc_num_capsules = 8
-            self.pc_in_channels = 512
-            self.pc_out_channels = 64
+            self.pc_in_channels = 256
+            self.pc_out_channels = 32
             self.pc_kernel_size = 9
-            self.pc_num_routes = 64 * 5 * 5
+            self.pc_num_routes = 32 * 8 * 8
 
             # Digit Capsule (dc)
             self.dc_num_capsules = 10
-            self.dc_num_routes = 64 * 5 * 5
+            self.dc_num_routes = 32 * 8 * 8
             self.dc_in_channels = 8
             self.dc_out_channels = 16
 
             # Decoder
-            self.input_width = 24
-            self.input_height = 24
+            self.input_width = 32
+            self.input_height = 32
 
         elif dataset == 'your own dataset':
             pass
@@ -139,18 +136,13 @@ if __name__ == '__main__':
     cifar10 = Dataset(dataset, BATCH_SIZE)
 
     capsule_net = CapsNet(config)
+    capsule_net = torch.nn.DataParallel(capsule_net)
     if USE_CUDA:
         capsule_net = capsule_net.cuda()
     capsule_net = capsule_net.module
 
-    optimizer = torch.optim.Adam(capsule_net.parameters(), lr = LEARNING_RATE)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=DECAY_RATE)
+    optimizer = torch.optim.Adam(capsule_net.parameters())
+
     for e in range(1, N_EPOCHS + 1):
         train(capsule_net, optimizer, cifar10.train_loader, e)
         test(capsule_net, cifar10.test_loader, e)
-
-        scheduler.step(DECAY_STEPS)
-        learning_rate = optimizer.param_groups[0]['lr']
-        # Apply lower bound to the learning rate
-        learning_rate = max(learning_rate, MIN_LR)
-        optimizer.param_groups[0]['lr'] = learning_rate

@@ -20,23 +20,14 @@ class Dataset:
             self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=_batch_size, shuffle=False)
 
         elif dataset == 'cifar10':
-            image_size = 24
-            data_transform_train = transforms.Compose([
+            data_transform = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.RandomCrop(size=(image_size, image_size)),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(brightness=0.2, contrast=(0.2, 1.8), saturation=0.2),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ])
-            data_transform_test = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.RandomCrop(size=(image_size, image_size)),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
             train_dataset = datasets.CIFAR10(
-                './data/cifar', train=True, download=True, transform=data_transform_train)
+                './data/cifar', train=True, download=True, transform=data_transform)
             test_dataset = datasets.CIFAR10(
-                './data/cifar', train=False, download=True, transform=data_transform_test)
+                './data/cifar', train=False, download=True, transform=data_transform)
 
             self.train_loader = torch.utils.data.DataLoader(
                 train_dataset, batch_size=_batch_size, shuffle=True)
